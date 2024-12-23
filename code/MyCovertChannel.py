@@ -12,26 +12,36 @@ class MyCovertChannel(CovertChannelBase):
         - You can edit __init__.
         """
         pass
-    def send(self, log_file_name, sleep_time, key):
+    def send(self, log_file_name, sleep_time, key,capacity_calc):
         """
         We encode the binary message by xor'ing with key given key should be 8 bit number in form of a string then we send the
         encoded byte bit by bit using CWR flag
         sleep_time : type int time between each package lower values may cause package loss recommended is 70
         key : type string 8 bit binary number
         """
-        binary_message = self.generate_random_binary_message_with_logging(log_file_name)
+        
+        if(capacity_calc):
+            binary_message = self.generate_random_binary_message_with_logging(log_file_name,min_length=16, max_length=16)
+        else:
+            binary_message = self.generate_random_binary_message_with_logging(log_file_name)
+        start_time = time.time()
+        
         for i in range(0, len(binary_message), 8):
             byte = binary_message[i:i+8]  
             xor_byte = format(int(byte, 2) ^ int(key, 2), '08b')  # xor with key given for encoding
 
-            print(f"Sending XOR'd byte: {xor_byte} (Original: {byte})")
+            #print(f"Sending XOR'd byte: {xor_byte} (Original: {byte})")
 
             for bit in xor_byte:
                 cwr_flag = 0x80 if bit == '1' else 0x00  
                 pkt = IP(dst="receiver%eth0") / TCP(flags=cwr_flag)
                 send(pkt, verbose=False)
                 time.sleep(sleep_time / 1000)
-        
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        covert_channel_capacity = 128 / elapsed_time
+        if(capacity_calc):
+            print(f"Covert Channel Capacity: {covert_channel_capacity:.2f} bits per second")
     
     def receive(self, log_file_name, key):
         """
@@ -45,14 +55,14 @@ class MyCovertChannel(CovertChannelBase):
             if IP in pkt and TCP in pkt:
                 cwr_flag = pkt[TCP].flags & 0x80
                 bit = '1' if cwr_flag else '0'
-                print(f"bit: {bit}")
+                #print(f"bit: {bit}")
             if bit is not None:
                 binary_message += bit
                 # End message when all bits of a byte are captured
                 if len(binary_message) % 8 == 0:
                     char = (chr((int(binary_message[-8:], 2)) ^ int(key,2))) # xor with key given for decoding
                     message += char
-                    print(f"Received char: {char}")
+                    #print(f"Received char: {char}")
                     if char == '.':  # end of message
                         break
         self.log_message(message, log_file_name)

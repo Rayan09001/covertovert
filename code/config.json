@@ -4,7 +4,8 @@
     "parameters": {
       "log_file_name": "TCPProtocolFieldManipulationChannelSender.log",
       "sleep_time": 70.0,
-      "key": "11001100"
+      "key": "11001100",
+      "capacity_calc": false
     }
   },
   "receive": {

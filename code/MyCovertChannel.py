@@ -12,24 +12,28 @@ class MyCovertChannel(CovertChannelBase):
         - You can edit __init__.
         """
         pass
-    def send(self, log_file_name, parameter1, parameter2):
+    def send(self, log_file_name, sleep_time, key):
         """
-        - In this function, you expected to create a random message (using function/s in CovertChannelBase), and send it to the receiver container. Entire sending operations should be handled in this function.
-        - After the implementation, please rewrite this comment part to explain your code basically.
+        We encode the binary message by xor'ing with key given key should be 8 bit number in form of a string then we send the
+        encoded byte bit by bit using CWR flag
         """
         binary_message = self.generate_random_binary_message_with_logging(log_file_name)
-        for bit in binary_message:
-            cwr_flag = 0x80 if bit == '1' else 0x00  # CWR flag is the 8th bit in the TCP flags byte
-            pkt = IP(dst="receiver%eth0") / TCP( flags=cwr_flag)
-            print(f"bit: {bit}")
-            send(pkt, verbose=False)
-            time.sleep(30.0/1000)
+        for i in range(0, len(binary_message), 8):
+            byte = binary_message[i:i+8]  
+            xor_byte = format(int(byte, 2) ^ int(key, 2), '08b')  # xor with key given for encoding
+
+            print(f"Sending XOR'd byte: {xor_byte} (Original: {byte})")
+
+            for bit in xor_byte:
+                cwr_flag = 0x80 if bit == '1' else 0x00  
+                pkt = IP(dst="receiver%eth0") / TCP(flags=cwr_flag)
+                send(pkt, verbose=False)
+                time.sleep(sleep_time / 1000)
         
     
-    def receive(self, parameter1, parameter2, parameter3, log_file_name):
+    def receive(self, log_file_name, key):
         """
-        - In this function, you are expected to receive and decode the transferred message. Because there are many types of covert channels, the receiver implementation depends on the chosen covert channel type, and you may not need to use the functions in CovertChannelBase.
-        - After the implementation, please rewrite this comment part to explain your code basically.
+        We receive encoded message bit by bit from CWR flag after we receive a byte we decode it by xor'ing with given key 
         """
         binary_message = ''
         message=''
@@ -43,14 +47,12 @@ class MyCovertChannel(CovertChannelBase):
                 binary_message += bit
                 # End message when all bits of a byte are captured
                 if len(binary_message) % 8 == 0:
-                    char = chr(int(binary_message[-8:], 2))
+                    char = (chr((int(binary_message[-8:], 2)) ^ int(key,2))) # xor with key given for decoding
                     message += char
                     print(f"Received char: {char}")
                     if char == '.':  # end of message
                         break
         self.log_message(message, log_file_name)
-    
-    
-        
+       
         
  

@@ -18,4 +18,4 @@ To calculate the covert channel capacity, the following steps were performed:
 2. A timer was started just before sending the first packet and stopped after the last packet was sent.
 3. The difference in seconds between the start and end times was calculated.
 4. The covert channel capacity was calculated by dividing the total number of bits (128) by the elapsed time in seconds.
-5. The calculated covert channel capacity is **6 bits per second**.
+5. The calculated covert channel capacity is **8 bits per second**.

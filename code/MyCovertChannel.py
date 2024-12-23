@@ -16,6 +16,8 @@ class MyCovertChannel(CovertChannelBase):
         """
         We encode the binary message by xor'ing with key given key should be 8 bit number in form of a string then we send the
         encoded byte bit by bit using CWR flag
+        sleep_time : type int time between each package lower values may cause package loss recommended is 70
+        key : type string 8 bit binary number
         """
         binary_message = self.generate_random_binary_message_with_logging(log_file_name)
         for i in range(0, len(binary_message), 8):
@@ -33,7 +35,8 @@ class MyCovertChannel(CovertChannelBase):
     
     def receive(self, log_file_name, key):
         """
-        We receive encoded message bit by bit from CWR flag after we receive a byte we decode it by xor'ing with given key 
+        We receive encoded message bit by bit from CWR flag after we receive a byte we decode it by xor'ing with given key
+        key : type string 8 bit binary number 
         """
         binary_message = ''
         message=''
